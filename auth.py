@@ -2,25 +2,29 @@ import bcrypt
 import os
 import re
 
-# --- Global Constants ---
+from db_manager import DatabaseManager
+
+#  Global Constants
 # Using a constant for the filename makes it easy to change later if needed.
 USER_DATA_FILE = "users.txt"
+# Initialize Database Manager
+db = DatabaseManager()
 
 
-# --- PART 1: SECURITY FUNCTIONS ---
+#  PART 1: SECURITY FUNCTIONS
 
 def hash_password(plain_text_password):
     """
-    Hashes a password using bcrypt.
-    Learned from Week 7 Lecture: Hashing is one-way. We never store plain text.
+    Hashes password using bcrypt.
+    Learnt from Week 7 Lecture: Hashing is one-way. Plain text can never be stored.
     """
     # 1. Convert string to bytes (bcrypt requires bytes)
     bytes_password = plain_text_password.encode('utf-8')
 
-    # 2. Generate a random salt (adds randomness to prevent Rainbow Table attacks)
+    # 2. Generate1 random salt (adds randomness to prevent Rainbow Table attacks)
     salt = bcrypt.gensalt()
 
-    # 3. Hash the password (slow by design to stop hackers)
+    # 3. Hash the password (slow to stop hackers)
     hashed_bytes = bcrypt.hashpw(bytes_password, salt)
 
     # 4. Decode back to string for storage in users.txt
@@ -40,7 +44,7 @@ def verify_password(plain_text_password, hashed_password):
     return bcrypt.checkpw(bytes_password, bytes_hashed_password)
 
 
-# --- PART 2: VALIDATION (Lab Requirement) ---
+#  PART 2: VALIDATION (Lab Requirement)
 
 def validate_username(username):
     """
@@ -83,94 +87,72 @@ def validate_password(password):
     return True, ""
 
 
-# --- PART 3: USER MANAGEMENT ---
+#  PART 3: USER MANAGEMENT
 
 def user_exists(username):
     """
-    Helper function to check if username is taken.
+    Checks if user exists in the SQLite Database.
     """
-    if not os.path.exists(USER_DATA_FILE):
-        return False
-
-    with open(USER_DATA_FILE, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line: continue
-
-            # File format is: username,hash
-            parts = line.split(',')
-            if len(parts) >= 1:
-                if parts[0] == username:
-                    return True
-    return False
+    # db.find_user returns the user data or None
+    return db.find_user(username) is not None
 
 
 def register_user(username, password):
     """
-    Registers a new user after validation.
+    Registers user into SQLite Database.
     """
     # 1. Validate Input
-    valid_user, msg_user = validate_username(username)
-    if not valid_user:
+    is_valid_user, msg_user = validate_username(username)
+    if not is_valid_user:
         print(f"Error: {msg_user}")
         return False
 
-    valid_pass, msg_pass = validate_password(password)
-    if not valid_pass:
+    is_valid_pass, msg_pass = validate_password(password)
+    if not is_valid_pass:
         print(f"Error: {msg_pass}")
         return False
 
-    # 2. Check Duplicates
+    # 2. Check Database for duplicate
     if user_exists(username):
         print(f"Error: User '{username}' already exists.")
         return False
 
-    # 3. Hash and Save
+    # 3. Hash Password
     hashed_pw = hash_password(password)
 
-    # Append mode 'a' adds to end of file
-    with open(USER_DATA_FILE, 'a') as f:
-        f.write(f"{username},{hashed_pw}\n")
-
-    print("Registration Successful!")
-    return True
+    # 4. Add to Database
+    if db.add_user(username, hashed_pw):
+        print("Registration Successful (Saved to Database)!")
+        return True
+    else:
+        print("Database Error.")
+        return False
 
 
 def login_user(username, password):
     """
-    Authenticates a user.
+    Authenticates against SQLite Database.
     """
-    if not os.path.exists(USER_DATA_FILE):
-        print("Error: No registered users found.")
+    # 1. Find user in DB
+    user_record = db.find_user(username)
+
+  # user_record format: (id, username, password_hash, role)
+    stored_hash = user_record[2]
+
+    # 2. Verify Password
+    if verify_password(password, stored_hash):
+        print(f"Login Successful! Welcome {username}.")
+        return True
+    else:
+        print("Error: Incorrect password.")
         return False
 
-    with open(USER_DATA_FILE, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line: continue
 
-            parts = line.split(',')
-            if len(parts) == 2:
-                stored_user, stored_hash = parts[0], parts[1]
-
-                if stored_user == username:
-                    # Found user, verify password
-                    if verify_password(password, stored_hash):
-                        print(f"Login Successful! Welcome {username}.")
-                        return True
-                    else:
-                        print("Error: Incorrect password.")
-                        return False
-
-    print("Error: Username not found.")
-    return False
-
-
-# --- PART 4: MAIN MENU ---
+#  PART 4: MAIN MENU
 
 def main():
     while True:
-        print("\n--- SECURE SYSTEM WEEK 7 ---")
+        print("\n SECURE SYSTEM WEEK 7 ")
         print("1. Register")
         print("2. Login")
         print("3. Exit")
