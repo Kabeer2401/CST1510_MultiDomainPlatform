@@ -1,0 +1,12 @@
+# Security Secrets (NEVER UPLOAD THESE)
+.streamlit/secrets.toml
+.env
+
+#  Python Junk Files
+__pycache__/
+*.pyc
+
+#  PyCharm Settings
+.idea/
+venv/
+
