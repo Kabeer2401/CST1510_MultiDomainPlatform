@@ -1,6 +1,20 @@
 import bcrypt
 import os
 import re
+#  WEEK 11: OOP REFACTORING
+class User:
+    """
+    User Entity Class.
+    Represents a system user with properties for authentication.
+    Refactored for Week 11 Software Architecture requirements.
+    """
+    def __init__(self, username, role='user'):
+        self.username = username
+        self.role = role
+        self.is_authenticated = False
+
+    def login(self):
+        self.is_authenticated = True
 
 from db_manager import DatabaseManager
 
@@ -142,6 +156,10 @@ def login_user(username, password):
     # 2. Verify Password
     if verify_password(password, stored_hash):
         print(f"Login Successful! Welcome {username}.")
+        # Week 11 Note: In a full OOP architecture, we instantiate the User class here:
+        # current_user = User(username)
+        # current_user.login()
+
         return True
     else:
         print("Error: Incorrect password.")
