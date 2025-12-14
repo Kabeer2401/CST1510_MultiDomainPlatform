@@ -1,5 +1,3 @@
-# Week 9: Main application entry point
-
 import streamlit as st
 from db_manager import DatabaseManager
 from auth import verify_password, hash_password
