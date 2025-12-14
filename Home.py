@@ -15,7 +15,7 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state.username = ""
 
-st.title("🛡️ Multi-Domain Platform")
+st.title("🛡️ Multi-Domain Intelligence Platform (Web Interface)")
 
 # If already logged in, show success and button to dashboard
 if st.session_state.logged_in:
