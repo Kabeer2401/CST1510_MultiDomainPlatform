@@ -55,8 +55,7 @@ if prompt:
             message_placeholder.markdown(full_response + "▌")
             time.sleep(0.1)  # Wait a tiny bit to look like thinking
 
-        # Final finish
         message_placeholder.markdown(full_response)
 
-    # 3. Save to History
+    # 3. Save
     st.session_state.messages.append({"role": "assistant", "content": full_response})

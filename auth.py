@@ -44,7 +44,7 @@ def verify_password(plain_text_password, hashed_password):
     return bcrypt.checkpw(bytes_password, bytes_hashed_password)
 
 
-#  PART 2: VALIDATION (Lab Requirement)
+#  PART 2: VALIDATION
 
 def validate_username(username):
     """
