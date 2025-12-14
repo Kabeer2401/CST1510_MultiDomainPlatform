@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import pandas as pd
 
 # Global constant for the database name
 DB_NAME = "platform_data_final.db"
@@ -10,6 +11,38 @@ class DatabaseManager:
     Handles all SQLite database interactions.
     Learnt from Week 8: We use a Class to encapsulate DB logic and keep it organized.
     """
+    # --- TIER 2: DATA SCIENCE DOMAIN ---
+    def add_dataset_metadata(self, name, rows, size_mb):
+        """ Log a new dataset upload """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO datasets_metadata (dataset_name, row_count, file_size_mb) VALUES (?, ?, ?)",
+                       (name, rows, size_mb))
+        conn.commit()
+        conn.close()
+
+    def get_datasets(self):
+        """ Get all datasets """
+        conn = self.get_connection()
+        df = pd.read_sql("SELECT * FROM datasets_metadata", conn)
+        conn.close()
+        return df
+
+    def create_it_ticket(self, issue, priority, assigned_to):
+        """ Create IT Ticket """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO it_tickets (issue_desc, priority, status, ticket_id) VALUES (?, ?, 'Open', ?)",
+                       (issue, priority, assigned_to)) # using ticket_id col for 'Assigned Agent' to save time
+        conn.commit()
+        conn.close()
+
+    def get_it_tickets(self):
+        """ Get all tickets """
+        conn = self.get_connection()
+        df = pd.read_sql("SELECT * FROM it_tickets", conn)
+        conn.close()
+        return df
 
     def __init__(self, db_name=DB_NAME):
         """
@@ -36,7 +69,7 @@ class DatabaseManager:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # 1. Users Table (Stores credentials)
+        # 1. Users Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +79,7 @@ class DatabaseManager:
             )
         ''')
 
-        # 2. Cyber Incidents Table (Domain 1)
+        # 2. Cyber Incidents Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cyber_incidents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +90,7 @@ class DatabaseManager:
             )
         ''')
 
-        # 3. Datasets Metadata Table (Domain 2 - Placeholder for now)
+        # 3. Datasets Metadata Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS datasets_metadata (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +100,7 @@ class DatabaseManager:
             )
         ''')
 
-        # 4. IT Tickets Table (Domain 3 - Placeholder for now)
+        # 4. IT Tickets Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS it_tickets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,7 +114,7 @@ class DatabaseManager:
         conn.close()
         print("Database tables created successfully.")
 
-    # --- USER MANAGEMENT & MIGRATION ---
+    #  USER MANAGEMENT & MIGRATION
 
     def add_user(self, username, password_hash):
         """
@@ -136,7 +169,7 @@ class DatabaseManager:
                             print(f"Skipped duplicate: {u}")
         print(f"Migration Complete. {count} users moved.")
 
-    # --- CYBER INCIDENT CRUD OPERATIONS (Week 8 Requirement) ---
+    #  CYBER INCIDENT CRUD OPERATIONS
 
     def create_cyber_incident(self, incident_type, severity, status):
         """
@@ -198,7 +231,7 @@ class DatabaseManager:
         return success
 
 
-# --- TEMPORARY TEST CODE ---
+#  TEMPORARY TEST CODE
 if __name__ == "__main__":
     db = DatabaseManager()
 
